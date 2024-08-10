@@ -7,6 +7,7 @@ This is a simple bot using Meshtastic Python API to handle incoming messages and
 ```sh
 git clone git@github.com:smuniz/mesh_grumpy_bot.git
 cd mesh_grumpy_bot
+pip install -r requirements
 ./bot <node_ip>
 ```
 

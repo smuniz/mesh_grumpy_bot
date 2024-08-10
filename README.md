@@ -10,7 +10,7 @@ cd mesh_grumpy_bot
 ./bot <node_ip>
 ```
 
-![Output example](assets/bot_working.jpeg)
+![Output example](assets/bot_working.jpg)
 
 
 # Meshtastic Argentina

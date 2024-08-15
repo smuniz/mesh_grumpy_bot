@@ -8,9 +8,21 @@ import time
 import random
 import traceback
 from datetime import datetime
+from os import path
+
+# Changelog
+#
+# v1.1:
+# * Added support for Meshtastic devices connected over Serial.
+# * Added more detailed /info output.
+# * Added missing comma in phrases list merging two phrases into one.
+#
+# v1.0:
+# * Initial version
+#
 
 __description__ = "BairesMesh grumpy chat BOT"
-__version__ = 1.0
+__version__ = 1.1
 
 try:
     import pyqrcode # type: ignore[import-untyped]
@@ -22,8 +34,10 @@ try:
     from meshtastic import mt_config
     from meshtastic import channel_pb2, config_pb2, portnums_pb2, remote_hardware, BROADCAST_ADDR
     from meshtastic.version import get_active_version
-    from meshtastic.ble_interface import BLEInterface
     from meshtastic.mesh_interface import MeshInterface
+    from meshtastic.tcp_interface import TCPInterface
+    from meshtastic.ble_interface import BLEInterface
+    from meshtastic.serial_interface import SerialInterface
 
     from colorama import Fore
     from colorama import Style
@@ -46,7 +60,7 @@ bardeadas = [
     "Te ganaste 2 medallas, {frm}... una por pelotudo y otra por si la perdés...",
     "La concha de la lora, {frm}...",
     "Che {frm}, me chupa un huevo!",
-    "Dejen descansar, la concha de la lora, {frm}"
+    "Dejen descansar, la concha de la lora, {frm}",
     "Anda a cantarle a Gardel, {frm}",
     "Che {frm}, sos más inútil que cenicero de moto",
     "Tenés menos onda que una puerta, {frm}",
@@ -230,9 +244,27 @@ def handle_message_packet(packet, interface):
 
             elif word_in_string(info_keywords, msg[1 : ]):
                 # Reply to every received message with some stats
-                rxSnr = packet.get("rxSnr", 0)
-                hopLimit = packet.get("hopLimit", 0)
-                reply = f"rxSnr: {rxSnr} - hopLimit: {hopLimit}"
+                logging.error(f"--->{packet}<---")
+                rx_snr = packet.get("rxSnr", "N/A")
+                rx_rssi = packet.get("rxRssi", "N/A")
+                hop_start = packet.get("hopStart", "N/A")
+                hopLimit = packet.get("hopLimit", "N/A")
+                epoch_time = packet.get("rxTime", None)
+                if epoch_time != None:
+                    epoch_datetime = datetime.fromtimestamp(epoch_time)
+                    rx_time = epoch_datetime.strftime('%H:%M:%S')
+                    now = datetime.now()
+                    time_difference = now - epoch_datetime
+                    total_secs = time_difference.total_seconds()
+                else:
+                    rx_time = "N/A"
+                    total_secs = 0.0
+
+                #print(f"Diferencia de tiempo: {time_difference}")
+                #print(f"Diferencia total en segundos: {total_seconds:.0f} segundos")
+                reply = f"rxSnr : {rx_snr}  rxRSSI : {rx_rssi} " \
+                        f"rxTime : {rx_time} (took {total_secs:.0f} secs)  " \
+                        f"hopStart : {hop_start}  hopLimit: {hopLimit}"
     else:
         global last_message_time
 
@@ -486,8 +518,11 @@ def main():
     while True:
         try:
             logging.info(f"Connected to device  : {Fore.GREEN}{device}{Style.RESET_ALL}")
-            client = meshtastic.tcp_interface.TCPInterface( device, debugOut=logfile,
-                                                           noProto=None)
+            if path.exists(device):
+                client = SerialInterface(devPath=device)
+            else:
+                client = TCPInterface(device, debugOut=logfile, noProto=None)
+
             start(client)
         except KeyboardInterrupt as ex:
             logging.warning(f"Leaving (CTRL-C pressed)...")

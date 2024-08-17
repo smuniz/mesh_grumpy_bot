@@ -12,6 +12,10 @@ from os import path
 
 # Changelog
 #
+# v1.3:
+# * Added /status as an information command.
+# * Removed packet dump when /info or /status is requested.
+
 # v1.2:
 # * Added Waypoint information.
 # * Removed Range Test packet dump.
@@ -27,7 +31,7 @@ from os import path
 #
 
 __description__ = "BairesMesh grumpy chat BOT"
-__version__ = 1.2
+__version__ = 1.3
  
 try:
     import pyqrcode # type: ignore[import-untyped]
@@ -185,7 +189,7 @@ ping_keywords = ["ping"]
 
 saludos_keywords = ["buen", "buenos", "buenas", "hola"]
 
-info_keywords = ["info"]
+info_keywords = ["info", "status"]
 
 last_message_time = time.time() # This way it'll take a bit to start bitching
 
@@ -249,7 +253,7 @@ def handle_message_packet(packet, interface):
 
             elif word_in_string(info_keywords, msg[1 : ]):
                 # Reply to every received message with some stats
-                logging.error(f"--->{packet}<---")
+                #logging.error(f"--->{packet}<---")
                 rx_snr = packet.get("rxSnr", "N/A")
                 rx_rssi = packet.get("rxRssi", "N/A")
                 hop_start = packet.get("hopStart", "N/A")

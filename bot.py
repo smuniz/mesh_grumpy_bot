@@ -12,6 +12,11 @@ from os import path
 
 # Changelog
 #
+# v1.2:
+# * Added Waypoint information.
+# * Removed Range Test packet dump.
+# * Minor code changes.
+#
 # v1.1:
 # * Added support for Meshtastic devices connected over Serial.
 # * Added more detailed /info output.
@@ -22,8 +27,8 @@ from os import path
 #
 
 __description__ = "BairesMesh grumpy chat BOT"
-__version__ = 1.1
-
+__version__ = 1.2
+ 
 try:
     import pyqrcode # type: ignore[import-untyped]
     from google.protobuf.json_format import MessageToDict
@@ -339,7 +344,7 @@ def onReceive(packet, interface):
             handle_message_packet(packet, interface)
 
         elif port == "RANGE_TEST_APP":
-            logging.error(f"---->{decoded}<---")
+            #logging.error(f"---->{decoded}<---")
             mode = "Range Test"
             logging.info(f"{Fore.CYAN}{Style.BRIGHT}{mode:<15} {peers_data:<45}")
             pass
@@ -438,8 +443,30 @@ def onReceive(packet, interface):
                          f"Want Response: {want_response}"
                          )
         elif port == "WAYPOINT_APP":
-            logging.error(f"---->{decoded}<---")
-            pass
+            # 
+            # ---->{'portnum': 'WAYPOINT_APP', 'payload': b'\x08\xe9\x98\xf9\xc7\r\x15~\x96f\xeb\x1d\xb2\xa5.\xdd \xff\xff\xff\xff\x072\nAeroparque:\x10prueba waypoints', 'waypoint': {'id': 3640544361, 'latitudeI': -345598338, 'longitudeI': -584145486, 'expire': 2147483647, 'name': 'Aeroparque', 'description': 'prueba waypoints', 'raw': id: 3640544361
+            #latitude_i: -345598338
+            #longitude_i: -584145486
+            #expire: 2147483647
+            #name: "Aeroparque"
+            #description: "prueba waypoints"
+            #}}<---
+            #logging.error(f"---->{decoded}<---")
+            waypoint = decoded.get('waypoint', None)
+            if waypoint == None:
+                logging.error("No waypoint information available.")
+                logging.error(f"---->{decoded}<---")
+                return
+
+            latitude = waypoint.get('latitude_i', "N/A")
+            longitude = waypoint.get('longitude_i', "N/A")
+            name = waypoint.get('name', "N/A")
+            description = waypoint.get('description', "N/A")
+            mode = "Waypoint"
+            logging.info(f"{Fore.RED}{Style.BRIGHT}{mode:<15} {peers_data:<45}{Style.RESET_ALL} "
+                    f"Name: {name} (desc : {description}) "
+                    f"Latitude: {latitude}, Longitude: {longitude}, "
+                    )
         elif port == "PAXCOUNTER_APP":
             logging.error(f"---->{decoded}<---")
             pass

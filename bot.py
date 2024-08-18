@@ -7,15 +7,20 @@ import logging
 import time
 import random
 import traceback
+import re
 from datetime import datetime
 from os import path
 
 # Changelog
 #
+# v1.4:
+# * Added BLE device support.
+# * Updated documentation.
+#
 # v1.3:
 # * Added /status as an information command.
 # * Removed packet dump when /info or /status is requested.
-
+#
 # v1.2:
 # * Added Waypoint information.
 # * Removed Range Test packet dump.
@@ -31,8 +36,8 @@ from os import path
 #
 
 __description__ = "BairesMesh grumpy chat BOT"
-__version__ = 1.3
- 
+__version__ = 1.4
+
 try:
     import pyqrcode # type: ignore[import-untyped]
     from google.protobuf.json_format import MessageToDict
@@ -532,6 +537,14 @@ def start(client):
             logging.error("--->%r<---" % client)
             break
 
+def contains_ip(string):
+    """Find IPv4 address inside a string."""
+    # regex for IPv4 address
+    ip_regex = r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
+
+    match = re.search(ip_regex, string)
+    return bool(match)
+
 def main():
     """Main routine."""
     logfile = None
@@ -548,11 +561,14 @@ def main():
 
     while True:
         try:
-            logging.info(f"Connected to device  : {Fore.GREEN}{device}{Style.RESET_ALL}")
+            logging.info(f"Connecting to device  : {Fore.GREEN}{device}{Style.RESET_ALL}")
             if path.exists(device):
                 client = SerialInterface(devPath=device)
             else:
-                client = TCPInterface(device, debugOut=logfile, noProto=None)
+                if contains_ip(device):
+                    client = TCPInterface(device, debugOut=logfile, noProto=None)
+                else:
+                    client = BLEInterface(device)
 
             start(client)
         except KeyboardInterrupt as ex:
@@ -561,6 +577,7 @@ def main():
         except Exception as ex:
             logging.error(f"Disconnected from device {device}. Reson : {ex}")
             logging.error("-" * 40)
+            time.sleep(1)
 
     client.close()
 

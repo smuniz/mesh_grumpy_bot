@@ -8,8 +8,10 @@ This is a simple bot using Meshtastic Python API to handle incoming messages and
 git clone git@github.com:smuniz/mesh_grumpy_bot.git
 cd mesh_grumpy_bot
 pip install -r requirements
-./bot <node_ip>
+./bot <device>
 ```
+
+The parameter named *<device>* can either be an IPv4 address, a serial device (i.e. /dev/cu.xxx) or a BLE (Bluetooth Low Energy) UUID.
 
 ![Output example](assets/bot_working.bmp)
 

@@ -11,7 +11,7 @@ pip install -r requirements
 ./bot <device>
 ```
 
-The parameter named *<device>* can either be an IPv4 address, a serial device (i.e. /dev/cu.xxx) or a BLE (Bluetooth Low Energy) UUID.
+The parameter named _<device>_ can either be an IPv4 address, a serial device (i.e. /dev/cu.xxx) or a BLE (Bluetooth Low Energy) UUID.
 
 ![Output example](assets/bot_working.bmp)
 

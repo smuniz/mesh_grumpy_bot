@@ -13,6 +13,10 @@ from os import path
 
 # Changelog
 #
+# v1.5:
+# * Added PAXcounter and other node attributes to output.
+# * Other code changes.
+#
 # v1.4:
 # * Added BLE device support.
 # * Updated documentation.
@@ -36,7 +40,7 @@ from os import path
 #
 
 __description__ = "BairesMesh grumpy chat BOT"
-__version__ = 1.4
+__version__ = 1.5
 
 try:
     import pyqrcode # type: ignore[import-untyped]
@@ -45,8 +49,9 @@ try:
 
     import meshtastic.test
     import meshtastic.util
+    #paxcount_pb2,
     from meshtastic import mt_config
-    from meshtastic import channel_pb2, config_pb2, portnums_pb2, remote_hardware, BROADCAST_ADDR
+    from meshtastic import mesh_pb2, storeforward_pb2, channel_pb2, config_pb2, portnums_pb2, remote_hardware, BROADCAST_ADDR
     from meshtastic.version import get_active_version
     from meshtastic.mesh_interface import MeshInterface
     from meshtastic.tcp_interface import TCPInterface
@@ -259,11 +264,15 @@ def handle_message_packet(packet, interface):
             elif word_in_string(info_keywords, msg[1 : ]):
                 # Reply to every received message with some stats
                 #logging.error(f"--->{packet}<---")
-                rx_snr = packet.get("rxSnr", "N/A")
-                rx_rssi = packet.get("rxRssi", "N/A")
-                hop_start = packet.get("hopStart", "N/A")
-                hopLimit = packet.get("hopLimit", "N/A")
+                rx_snr = packet.get("rxSnr", "???")
+                rx_rssi = packet.get("rxRssi", "???")
+                hop_start = packet.get("hopStart", "???")
+                hopLimit = packet.get("hopLimit", "???")
                 epoch_time = packet.get("rxTime", None)
+                mac_addr = packet.get('macaddr')
+                if mac_addr:
+                    mac_addr = "MAC : "
+                    mac_addr += ":".join(["%02X" % ord(x) for x in user.get("macaddr")])
                 if epoch_time != None:
                     epoch_datetime = datetime.fromtimestamp(epoch_time)
                     rx_time = epoch_datetime.strftime('%H:%M:%S')
@@ -271,14 +280,16 @@ def handle_message_packet(packet, interface):
                     time_difference = now - epoch_datetime
                     total_secs = time_difference.total_seconds()
                 else:
-                    rx_time = "N/A"
+                    rx_time = "???"
                     total_secs = 0.0
 
                 #print(f"Diferencia de tiempo: {time_difference}")
                 #print(f"Diferencia total en segundos: {total_seconds:.0f} segundos")
                 reply = f"rxSnr : {rx_snr}  rxRSSI : {rx_rssi} " \
                         f"rxTime : {rx_time} (took {total_secs:.0f} secs)  " \
-                        f"hopStart : {hop_start}  hopLimit: {hopLimit}"
+                        f"hopStart : {hop_start}  hopLimit : {hopLimit}"
+                if mac_addr:
+                    reply += f" - {mac_addr}"
     else:
         global last_message_time
 
@@ -378,21 +389,25 @@ def onReceive(packet, interface):
         elif port == "NODEINFO_APP":
             #logging.error(f"---->{decoded}<---")
             user = decoded.get("user", None)
-            mode = "User Info"
+            mode = "Node Info"
             if user is None:
                 logging.warning(
                     f"{Fore.YELLOW}{Style.BRIGHT}{mode:<15} {peers_data:<45}{Style.RESET_ALL} "
                     "Not available")
                 return
 
-            long_name = user.get("longName", "N/A")
-            short_name = user.get("shortName", "N/A")
-            hw_model = user.get("hwModel", "N/A")
-            role = user.get("role", "N/A")
+            long_name = user.get("longName", "???")
+            short_name = user.get("shortName", "???")
+            hw_model = user.get("hwModel", "???")
+            role = user.get("role", "???")
+            if user.get('macaddr'):
+                mac_addr = "MAC : "
+                mac_addr += ":".join(["%02X" % ord(x) for x in user.get("macaddr")])
             logging.info(
                 f"{Fore.YELLOW}{Style.BRIGHT}{mode:<15} {peers_data:<45}{Style.RESET_ALL} "
-                f"Name : {long_name} ({short_name}), "
-                f"Hw model : {hw_model}, Role : {role}")
+                f"Name : {long_name} ({short_name}) "
+                f"Hw model : {hw_model} Role : {role} "
+                f"{mac_addr}")
             pass
         elif port == "ADMIN_APP":
             pass
@@ -416,10 +431,10 @@ def onReceive(packet, interface):
 
             if 'deviceMetrics' in telemetry:
                 metrics = telemetry.get('deviceMetrics')
-                battery_level = metrics.get('batteryLevel')
-                voltage = metrics.get('voltage')
-                channel_utilization = metrics.get('channelUtilization')
-                air_util_tx = metrics.get('airUtilTx')
+                battery_level = metrics.get('batteryLevel', "???")
+                voltage = metrics.get('voltage', "???")
+                channel_utilization = metrics.get('channelUtilization', "???")
+                air_util_tx = metrics.get('airUtilTx', "???")
 
                 logging.info(f"{Fore.MAGENTA}{mode:<15} {peers_data:<45}{Style.RESET_ALL} "
                              f"Voltage: {voltage}V ({battery_level}%), "
@@ -432,8 +447,8 @@ def onReceive(packet, interface):
                 #  barometric_pressure: 1015.01
                 #}
                 metrics = telemetry.get('environmentMetrics')
-                temperature = metrics.get('temperature')
-                barometric_pressure = metrics.get('barometricPressure')
+                temperature = metrics.get('temperature', "???")
+                barometric_pressure = metrics.get('barometricPressure', "???")
 
                 logging.info(f"{Fore.MAGENTA}{mode:<15} {peers_data:<45}{Style.RESET_ALL} "
                              f"Temp: {temperature}C , Barometric Press. {barometric_pressure}{Style.RESET_ALL}"
@@ -447,7 +462,7 @@ def onReceive(packet, interface):
             pass
         elif port == "TRACEROUTE_APP":
             mode = "Traceroute"
-            want_response = decoded.get("wantResponse", "N/A")
+            want_response = decoded.get("wantResponse", "???")
             logging.info(f"{Fore.RED}{mode:<15} {peers_data:<45}{Style.RESET_ALL} "
                          f"Want Response: {want_response}"
                          )
@@ -467,24 +482,45 @@ def onReceive(packet, interface):
                 logging.error(f"---->{decoded}<---")
                 return
 
-            latitude = waypoint.get('latitude_i', "N/A")
-            longitude = waypoint.get('longitude_i', "N/A")
-            name = waypoint.get('name', "N/A")
-            description = waypoint.get('description', "N/A")
+            latitude = waypoint.get('latitude_i', "???")
+            longitude = waypoint.get('longitude_i', "???")
+            name = waypoint.get('name', "???")
+            description = waypoint.get('description', "???")
             mode = "Waypoint"
             logging.info(f"{Fore.RED}{Style.BRIGHT}{mode:<15} {peers_data:<45}{Style.RESET_ALL} "
                     f"Name: {name} (desc : {description}) "
                     f"Latitude: {latitude}, Longitude: {longitude}, "
                     )
         elif port == "PAXCOUNTER_APP":
-            logging.error(f"---->{decoded}<---")
-            pass
+            #logging.error(f"---->{decoded}<---")
+            mode = "Paxcounter"
+            message = paxcount_pb2.Paxcount()
+            payload_bytes = packet['decoded'].get('payload', b'')
+            message.ParseFromString(payload_bytes)
+            wifi = message.wifi
+            ble = message.ble
+            uptime = message.uptime
+            logging.info(f"{Fore.RED}{Style.BRIGHT}{mode:<15} {peers_data:<45}{Style.RESET_ALL} "
+                    f"    Wifii : wifi "
+                    f"    BLE : ble "
+                    f"    Uptime : uptime")
         elif port == "STORE_FORWARD_APP":
             logging.error(f"---->{decoded}<---")
             pass
         elif port == "NEIGHBORINFO_APP":
-            logging.error(f"---->{decoded}<---")
-            pass
+            #logging.error(f"---->{decoded}<---")
+            mode = "Neighbor"
+            message = mesh_pb2.NeighborInfo()
+            payload_bytes = packet['decoded'].get('payload', b'')
+            message.ParseFromString(payload_bytes)
+            logging.info(f"{Fore.GREEN}{Style.BRIGHT}{mode:<15} {peers_data:<45}{Style.RESET_ALL} "
+                    f"Node ID: {message.node_id} / {idToHex(message.node_id)} "
+                    f"Last Sent By ID: {message.last_sent_by_id} "
+                    f"Node Broadcast Interval : {message.node_broadcast_interval_secs} secs."
+                    "Neighbors:")
+            for neighbor in message.neighbors:
+                logging.info(f"    Neighbor ID: {neighbor.node_id} / {idToHex(neighbor.node_id)} "
+                    f"SNR: {neighbor.snr}")
         elif port == "MAP_REPORT_APP":
             logging.error(f"---->{decoded}<---")
             pass
@@ -511,6 +547,9 @@ def onReceive(packet, interface):
         logging.error(f"Error {ex}")
         traceback_str = traceback.format_exc()
         logging.error(f"Traceback :\n{traceback_str}")
+
+def idToHex(nodeId): 
+    return '!' + hex(nodeId)[2:]
 
 def onConnection(interface, topic=pub.AUTO_TOPIC):  # pylint: disable=W0613
     """Callback invoked when we connect/disconnect from a radio"""

@@ -13,6 +13,12 @@ from os import path
 
 # Changelog
 #
+# v1.6:
+# * Added other apps to output.
+# * Enhanced output format and alignment.
+# * Moved phrases to a different file.
+# * Fixed missing import.
+#
 # v1.5:
 # * Added PAXcounter and other node attributes to output.
 # * Other code changes.
@@ -40,8 +46,9 @@ from os import path
 #
 
 __description__ = "BairesMesh grumpy chat BOT"
-__version__ = 1.5
+__version__ = 1.6
 
+from phrases import *
 try:
     import pyqrcode # type: ignore[import-untyped]
     from google.protobuf.json_format import MessageToDict
@@ -49,9 +56,10 @@ try:
 
     import meshtastic.test
     import meshtastic.util
-    #paxcount_pb2,
     from meshtastic import mt_config
-    from meshtastic import mesh_pb2, storeforward_pb2, channel_pb2, config_pb2, portnums_pb2, remote_hardware, BROADCAST_ADDR
+    from meshtastic import mesh_pb2, storeforward_pb2, channel_pb2, \
+            paxcount_pb2, config_pb2, portnums_pb2, \
+            remote_hardware, BROADCAST_ADDR
     from meshtastic.version import get_active_version
     from meshtastic.mesh_interface import MeshInterface
     from meshtastic.tcp_interface import TCPInterface
@@ -64,132 +72,6 @@ except ImportError as error:
     print(f"Error : {error}")
     print("\nMake sure to run: pip install -r requirements\n")
     sys.exit(1)
-
-bardeadas = [
-    "Chupame un huevo, {frm}!",
-    "No rompas los huevos, {frm}",
-    "Deja de joder, {frm}",
-    "Anda a laburar, {frm}",
-    "Che {frm}, no rompas las pelotas",
-    "Alguien está al pedo, {frm}",
-    "Te dieron franco en el laburo, {frm}?",
-    "Che {frm}, buscate un trabajo honesto!",
-    "Andate a la esquina a ver si llueve, {frm}...",
-    "Ahí lo tenés al pelotudo, {frm}...",
-    "Te ganaste 2 medallas, {frm}... una por pelotudo y otra por si la perdés...",
-    "La concha de la lora, {frm}...",
-    "Che {frm}, me chupa un huevo!",
-    "Dejen descansar, la concha de la lora, {frm}",
-    "Anda a cantarle a Gardel, {frm}",
-    "Che {frm}, sos más inútil que cenicero de moto",
-    "Tenés menos onda que una puerta, {frm}",
-    "No servís ni para espiar con una botella, {frm}",
-    "Che {frm}, tenés menos luces que un barco pirata",
-    "Anda a freír churros, {frm}",
-    "{frm}, sos un cabeza de termo",
-    "Sos un desastre con patas, {frm}",
-    "Che {frm}, tenés menos vida que un vampiro",
-    "Sos más lento que una tortuga en reversa, {frm}",
-    "Anda a cortar el pasto, {frm}",
-    "Che {frm}, sos más pesado que collar de melones",
-    "Tenés menos palabras que un telegrama, {frm}",
-    "{frm}, sos más aburrido que chupar un clavo",
-    "Che {frm}, tenés menos futuro que un político honesto",
-    "Sos un zapallo, {frm}",
-    "Anda a lavar los platos, {frm}",
-    "Che {frm}, tenés menos chispa que un encendedor mojado",
-    "{frm}, sos un bocón",
-    "Tenés menos gracia que un velorio, {frm}",
-    "{frm}, sos un caradura",
-    "Sos un pancho sin mostaza, {frm}",
-    "{frm}, sos un queso",
-    "Tenés menos suerte que un gato en un asado, {frm}",
-    "Sos más torpe que una mula coja, {frm}",
-    "Che {frm}, sos un zapallo relleno",
-    "Tenés menos neuronas que un mosquito, {frm}",
-    "Sos un cuatro de copas, {frm}",
-    "Anda a contarle a tu abuela, {frm}",
-    "Che {frm}, sos más feo que pisar caca descalzo",
-    "Tenés menos sangre que una lombriz, {frm}",
-    "Anda a cantarle a Magoya, {frm}",
-    "Che {frm}, sos un marmota",
-    "Sos más lento que un caracol en bajada, {frm}",
-    "Sos más corto que patada de chancho, {frm}",
-    "Che {frm}, sos un tarado",
-    "Tenés menos brillo que un ladrillo, {frm}",
-    "{frm}, sos un perejil",
-    "Sos un gil, {frm}"
-]
-
-
-saludos_de_manana = [
-    "¡Buenos días, {frm}!",
-    "¡Feliz mañana, {frm}!",
-    "¡Que tengas un excelente día, {frm}!",
-    "¡Despierta y brilla, {frm}!",
-    "¡Que tengas una mañana maravillosa, {frm}!",
-    "¡Buenos días, {frm}! Que hoy sea un gran día para ti.",
-    "¡Espero que tengas una mañana fantástica, {frm}!",
-    "¡Buenos días, {frm}! ¡Aprovecha el día!",
-    "¡Que tu mañana esté llena de alegría y energía, {frm}!",
-    "¡Buen día, {frm}! Que todos tus sueños se hagan realidad hoy.",
-    "Saludos cordiales y buenos días, {frm}.",
-    "Buenos días, {frm}, saludos cordiales.",
-    "Que tengas un día excelente, {frm}, saludos cordiales.",
-    "Saludos cordiales, {frm}, que disfrutes de tu mañana.",
-    "Buenos días, {frm}, recibe un cordial saludo.",
-    "¡Qué alegría saludarte esta mañana, {frm}!",
-    "¡Buenos días y bendiciones para ti, {frm}!",
-    "¡Hola, {frm}! Te deseo una mañana espectacular.",
-    "¡Buenos días, {frm}! Que este día te traiga mucha felicidad.",
-    "¡Muy buenos días, {frm}! Que tengas una jornada fabulosa."
-]
-
-saludos_de_tarde = [
-    "¡Buenas tardes, {frm}!",
-    "¡Espero que estés teniendo una excelente tarde, {frm}!",
-    "¡Qué tal tu día, {frm}? ¡Buenas tardes!",
-    "¡Buenas tardes, {frm}! Que tu tarde sea muy productiva.",
-    "¡Que disfrutes de una maravillosa tarde, {frm}!",
-    "¡Buenas tardes, {frm}! Que continúes teniendo un día estupendo.",
-    "¡Hola, {frm}! Te deseo una tarde llena de éxitos.",
-    "¡Buenas tardes, {frm}! ¿Cómo va todo?",
-    "¡Que tengas una tarde fantástica, {frm}!",
-    "¡Buenas tardes, {frm}! Que el resto de tu día sea grandioso.",
-    "Saludos cordiales y buenas tardes, {frm}.",
-    "Buenas tardes, {frm}, saludos cordiales.",
-    "Que tengas una excelente tarde, {frm}, saludos cordiales.",
-    "Saludos cordiales, {frm}, que disfrutes de tu tarde.",
-    "Buenas tardes, {frm}, recibe un cordial saludo.",
-    "¡Qué alegría saludarte esta tarde, {frm}!",
-    "¡Buenas tardes y bendiciones para ti, {frm}!",
-    "¡Hola, {frm}! Te deseo una tarde espectacular.",
-    "¡Buenas tardes, {frm}! Que esta tarde te traiga mucha felicidad.",
-    "¡Muy buenas tardes, {frm}! Que tengas una jornada fabulosa."
-]
-
-saludos_de_noche = [
-    "¡Buenas noches, {frm}!",
-    "¡Espero que hayas tenido un excelente día, {frm}!",
-    "¡Que tengas una noche tranquila y reparadora, {frm}!",
-    "¡Buenas noches, {frm}! Que descanses bien.",
-    "¡Que disfrutes de una noche maravillosa, {frm}!",
-    "¡Buenas noches, {frm}! Que tus sueños sean dulces.",
-    "¡Hola, {frm}! Te deseo una noche llena de paz.",
-    "¡Buenas noches, {frm}! ¿Cómo estuvo tu día?",
-    "¡Que tengas una noche fantástica, {frm}!",
-    "¡Buenas noches, {frm}! Que el descanso te renueve.",
-    "Saludos cordiales y buenas noches, {frm}.",
-    "Buenas noches, {frm}, saludos cordiales.",
-    "Que tengas una excelente noche, {frm}, saludos cordiales.",
-    "Saludos cordiales, {frm}, que disfrutes de tu noche.",
-    "Buenas noches, {frm}, recibe un cordial saludo.",
-    "¡Qué alegría saludarte esta noche, {frm}!",
-    "¡Buenas noches y bendiciones para ti, {frm}!",
-    "¡Hola, {frm}! Te deseo una noche espectacular.",
-    "¡Buenas noches, {frm}! Que esta noche te traiga mucha paz.",
-    "¡Muy buenas noches, {frm}! Que descanses y recargues energías."
-]
 
 
 test_keywords = [
@@ -298,7 +180,7 @@ def handle_message_packet(packet, interface):
 
         # Check if at least N minutes have passed since the last message
         if current_time - last_message_time >= DISRUPT_MSG_INTERVAL * 60:
-            reply = random.choice(bardeadas)
+            reply = random.choice(insults)
 
             # Update the last message time to the current time
             last_message_time = current_time
@@ -347,8 +229,8 @@ def onReceive(packet, interface):
         #    f"-> {Fore.YELLOW}{Style.BRIGHT}{to_short_name}{Style.RESET_ALL}"
         #             )
         peers_data = \
-            f"{Style.RESET_ALL}({Fore.CYAN}{Style.BRIGHT}{from_short_name}{Style.RESET_ALL} " \
-            f"-> {Fore.YELLOW}{Style.BRIGHT}{to_short_name}{Style.RESET_ALL})"
+                f"{Style.RESET_ALL}{Fore.CYAN}{Style.BRIGHT}{from_short_name:>6}{Style.RESET_ALL} " \
+            f"-> {Fore.YELLOW}{Style.BRIGHT}{to_short_name}{Style.RESET_ALL}"
 
         #if decoded["portnum"] != "TEXT_MESSAGE_APP"":
         #    return
@@ -410,10 +292,12 @@ def onReceive(packet, interface):
                 f"{mac_addr}")
             pass
         elif port == "ADMIN_APP":
-            pass
+            mode = "Admin"
+            logging.info(f"{Fore.CYAN}{Style.BRIGHT}{mode:<15} {peers_data:<45}")
         elif port == "ROUTING_APP":
             #logging.error(f"---->{decoded}<---")
-            pass
+            mode = "Routing"
+            logging.info(f"{Fore.CYAN}{Style.BRIGHT}{mode:<15} {peers_data:<45}")
         elif port == "TELEMETRY_APP":
             mode = "Telemetry"
             #
@@ -456,10 +340,12 @@ def onReceive(packet, interface):
 
         elif port == "REMOTE_HARDWARE_APP":
             logging.error(f"---->{decoded}<---")
-            pass
+            mode = "Remote HW"
+            logging.info(f"{Fore.CYAN}{Style.BRIGHT}{mode:<15} {peers_data:<45}")
         elif port == "SIMULATOR_APP":
             logging.error(f"---->{decoded}<---")
-            pass
+            mode = "Simulator"
+            logging.info(f"{Fore.CYAN}{Style.BRIGHT}{mode:<15} {peers_data:<45}")
         elif port == "TRACEROUTE_APP":
             mode = "Traceroute"
             want_response = decoded.get("wantResponse", "???")
@@ -600,7 +486,7 @@ def main():
 
     while True:
         try:
-            logging.info(f"Connecting to device  : {Fore.GREEN}{device}{Style.RESET_ALL}")
+            logging.info(f"Connecting to device {Fore.GREEN}{Style.BRIGHT}{device}{Style.RESET_ALL}")
             if path.exists(device):
                 client = SerialInterface(devPath=device)
             else:

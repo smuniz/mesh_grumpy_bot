@@ -6,7 +6,7 @@ This is a simple bot using Meshtastic Python API to handle incoming messages and
 
 This script leverages the power of Meshtastic Python letting users obtain information about their nodes.
 
-Supported commands are:
+- Supported commands are:
     - /ping or /test : Answers user. Helpful to see if the node is successfully connected to the mesh.
     - /info or /status : Shows users RSSI and SNR of the message received by the node. Useful for range tests.
 
